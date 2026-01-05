@@ -4,3 +4,4 @@ pydantic[email]
 groq
 supabase
 python-dotenv
+langdetect

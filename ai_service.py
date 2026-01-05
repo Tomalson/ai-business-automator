@@ -26,6 +26,7 @@ Instructions:
   - 7-10: High value (specific needs, budget, urgency)
 - If information is not available, set to null (except score, which must always be a number).
 - Response MUST be EXCLUSIVELY a valid JSON object with no additional text, explanations, or markdown. Do not add ```json or anything else.
+- IMPORTANT: All extracted string values (especially summary, product, city) MUST be in the same language as the input text.
 
 Text to analyze:
 {text}
