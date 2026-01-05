@@ -51,24 +51,22 @@ System for automatic structuring of sales leads from unstructured texts (emails,
 Send POST to `/process-lead` with JSON:
 ```json
 {
-  "text": "Cześć, jestem Jan Kowalski z Warszawy. Interesuje się oprogramowaniem do automatyzacji sprzedaży. Budżet 10 000 PLN. Tel. 123-456-789. Email: jan@example.com"
+  "text": "Hi, I'm Jan Kowalski from Warsaw. Interested in sales automation software. Budget 10,000 PLN. Phone: 123-456-789. Email: jan@example.com"
 }
 ```
 
 Response:
 ```json
 {
+  
   "name": "Jan Kowalski",
   "email": "jan@example.com",
   "phone": "123-456-789",
   "product": "sales automation software",
-  "product": "oprogramowanie do automatyzacji sprzedaży",
   "budget_est": "10 000 PLN",
   "urgency": "High",
   "city": "Warsaw",
   "summary": "I need sales automation software urgently.",
-  "city": "Warszawa",
-  "summary": "Klient z Warszawy zainteresowany oprogramowaniem do automatyzacji sprzedaży.",
   "score": 9
 }
 ```
@@ -77,7 +75,7 @@ Response:
 
 **Input text (messy):**
 ```
-Hi, I'm Jan Kowalski from Warsaw. Interested in sales automation software. Budget 10,000 PLN. Phone: 123-456-789. Email: jan@example.com 
+Cześć, jestem Jan Kowalski z Warszawy. Interesuje się oprogramowaniem do automatyzacji sprzedaży. Budżet 10 000 PLN. Tel. 123-456-789. Email: jan@example.com
 ```
 
 **Output (clean JSON):**
@@ -86,11 +84,11 @@ Hi, I'm Jan Kowalski from Warsaw. Interested in sales automation software. Budge
   "name": "Jan Kowalski",
   "email": "jan@example.com",
   "phone": "123-456-789",
-  "product": "sales automation software",
+  "product": "oprogramowanie do automatyzacji sprzedaży",
   "budget_est": "10 000 PLN",
   "urgency": "High",
-  "city": "Warsaw",
-  "summary": "I need sales automation software urgently.",
+  "city": "Warszawa",
+  "summary": "Klient z Warszawy zainteresowany oprogramowaniem do automatyzacji sprzedaży.",
   "score": 9
 }
 ```
