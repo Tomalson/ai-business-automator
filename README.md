@@ -2,6 +2,10 @@
 
 System for automatic structuring of sales leads from unstructured texts (emails, messages) using AI.
 
+## Business Value
+
+**Saves up to 10 hours weekly on manual lead transcription.**
+
 ## Features
 
 - **AI-powered data extraction**: Extracts name, email, phone, product, budget, urgency, city, summary.
@@ -51,6 +55,28 @@ Send POST to `/process-lead` with JSON:
 ```
 
 Response:
+```json
+{
+  "name": "Jan Kowalski",
+  "email": "jan@example.com",
+  "phone": "123-456-789",
+  "product": "sales automation software",
+  "budget_est": "10 000 PLN",
+  "urgency": "High",
+  "city": "Warsaw",
+  "summary": "I need sales automation software urgently.",
+  "score": 9
+}
+```
+
+## Example
+
+**Input text (messy):**
+```
+Cześć, jestem Jan Kowalski z Warszawy. Interesuje się oprogramowaniem do automatyzacji sprzedaży. Budżet 10 000 PLN. Tel. 123-456-789. Email: jan@example.com
+```
+
+**Output (clean JSON):**
 ```json
 {
   "name": "Jan Kowalski",
