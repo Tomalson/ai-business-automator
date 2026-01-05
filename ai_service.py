@@ -10,21 +10,21 @@ class AIService:
 
     def process_lead_text(self, text: str) -> Lead:
         prompt = f"""
-Jesteś ekspertem w analizie leadów sprzedażowych. Twoim zadaniem jest przetworzenie nieustrukturyzowanego tekstu z maila lub wiadomości na strukturyzowane dane JSON.
+You are an expert in sales lead analysis. Your task is to process unstructured text from an email or message into structured JSON data.
 
-Instrukcje:
-- Wyciągnij następujące informacje: name (imię i nazwisko), email, phone (numer telefonu), product (produkt/usługa), budget_est (szacunkowy budżet jako string, np. '10000 PLN'), urgency (pilność: Wysoka/Średnia/Niska), city (miasto), summary (krótkie podsumowanie).
-- Oceń wartość leada na skali 1-10 (score), gdzie:
-  - 1-3: Spam lub niskiej wartości (np. brak kontaktu, ogólne pytania)
-  - 4-6: Średnia wartość (podstawowe zainteresowanie)
-  - 7-10: Wysoka wartość (konkretne potrzeby, budżet, pilność)
-- Jeśli informacje nie są dostępne, ustaw na null (oprócz score, który zawsze musi być liczbą).
-- Odpowiedź MUSI być WYŁĄCZNIE prawidłowym obiektem JSON bez żadnego dodatkowego tekstu, wyjaśnień lub markdown. Nie dodawaj ```json ani niczego innego.
+Instructions:
+- Extract the following information: name (full name), email, phone (phone number), product (product/service), budget_est (estimated budget as string, e.g. '10000 PLN'), urgency (High/Medium/Low), city, summary (brief summary).
+- Rate the lead value on a scale of 1-10 (score), where:
+  - 1-3: Spam or low value (e.g. no contact, general questions)
+  - 4-6: Medium value (basic interest)
+  - 7-10: High value (specific needs, budget, urgency)
+- If information is not available, set to null (except score, which must always be a number).
+- Response MUST be EXCLUSIVELY a valid JSON object with no additional text, explanations, or markdown. Do not add ```json or anything else.
 
-Tekst do analizy:
+Text to analyze:
 {text}
 
-Odpowiedź JSON:
+JSON Response:
 """
 
         try:
@@ -38,7 +38,7 @@ Odpowiedź JSON:
                 max_tokens=500
             )
             raw_content = response.choices[0].message.content.strip()
-            # Usuń ewentualne markdown ```json
+            # Remove possible markdown ```json
             if raw_content.startswith("```json"):
                 raw_content = raw_content[7:]
             if raw_content.endswith("```"):
@@ -46,7 +46,7 @@ Odpowiedź JSON:
             raw_content = raw_content.strip()
             
             data = json.loads(raw_content)
-            # Walidacja z Pydantic
+            # Validate with Pydantic
             lead = Lead(**data)
             return lead
         except Exception as e:

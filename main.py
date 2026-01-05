@@ -8,12 +8,12 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Ładuje zmienne z .env
 
-app = FastAPI(title="AI Business Automator", description="System do strukturyzacji leadów sprzedażowych")
+app = FastAPI(title="AI Business Automator", description="System for automatic sales lead structuring")
 
-# Dodaj CORS middleware
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # W produkcji ogranicz do konkretnych domen
+    allow_origins=["*"],  # In production, restrict to specific domains
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
