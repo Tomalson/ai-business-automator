@@ -10,6 +10,7 @@ System for automatic structuring of sales leads from unstructured texts (emails,
 
 - **AI-powered data extraction**: Extracts name, email, phone, product, budget, urgency, city, summary.
 - **Lead scoring**: Rates lead value on a scale of 1-10 (from spam to high value).
+- **Language consistency**: Output JSON fields (summary, product, city) match the input language.
 - **Database saving**: Automatically saves structured data to Supabase (PostgreSQL).
 - **REST API**: FastAPI endpoint for processing texts.
 
@@ -50,7 +51,7 @@ System for automatic structuring of sales leads from unstructured texts (emails,
 Send POST to `/process-lead` with JSON:
 ```json
 {
-  "text": "Hi, I'm Jan Kowalski from Warsaw. Interested in sales automation software. Budget 10,000 PLN. Phone: 123-456-789. Email: jan@example.com"
+  "text": "Cześć, jestem Jan Kowalski z Warszawy. Interesuje się oprogramowaniem do automatyzacji sprzedaży. Budżet 10 000 PLN. Tel. 123-456-789. Email: jan@example.com"
 }
 ```
 
@@ -61,10 +62,13 @@ Response:
   "email": "jan@example.com",
   "phone": "123-456-789",
   "product": "sales automation software",
+  "product": "oprogramowanie do automatyzacji sprzedaży",
   "budget_est": "10 000 PLN",
   "urgency": "High",
   "city": "Warsaw",
   "summary": "I need sales automation software urgently.",
+  "city": "Warszawa",
+  "summary": "Klient z Warszawy zainteresowany oprogramowaniem do automatyzacji sprzedaży.",
   "score": 9
 }
 ```
@@ -73,7 +77,7 @@ Response:
 
 **Input text (messy):**
 ```
-Cześć, jestem Jan Kowalski z Warszawy. Interesuje się oprogramowaniem do automatyzacji sprzedaży. Budżet 10 000 PLN. Tel. 123-456-789. Email: jan@example.com
+Hi, I'm Jan Kowalski from Warsaw. Interested in sales automation software. Budget 10,000 PLN. Phone: 123-456-789. Email: jan@example.com 
 ```
 
 **Output (clean JSON):**
