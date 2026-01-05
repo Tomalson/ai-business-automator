@@ -10,7 +10,7 @@ class DatabaseService:
 
     def insert_lead(self, lead: Lead) -> dict:
         try:
-            # Zakładamy tabelę 'leads' w Supabase z kolumnami odpowiadającymi polom Lead
+            # Assuming 'leads' table in Supabase with columns matching Lead fields
             data = lead.dict()
             response = self.supabase.table('leads').insert(data).execute()
             return {"success": True, "data": response.data}
