@@ -1,74 +1,74 @@
 # AI Business Automator
 
-System do automatycznej strukturyzacji leadów sprzedażowych z nieustrukturyzowanych tekstów (maile, wiadomości) przy użyciu AI.
+System for automatic structuring of sales leads from unstructured texts (emails, messages) using AI.
 
-## Funkcjonalności
+## Features
 
-- **AI-powered ekstrakcja danych**: Wyciąga imię, email, telefon, produkt, budżet, pilność, miasto, podsumowanie.
-- **Scoring leadów**: Ocenia wartość leada na skali 1-10 (od spamu do wysokiej wartości).
-- **Zapis do bazy**: Automatycznie zapisuje strukturyzowane dane do Supabase (PostgreSQL).
-- **REST API**: FastAPI endpoint do przetwarzania tekstów.
+- **AI-powered data extraction**: Extracts name, email, phone, product, budget, urgency, city, summary.
+- **Lead scoring**: Rates lead value on a scale of 1-10 (from spam to high value).
+- **Database saving**: Automatically saves structured data to Supabase (PostgreSQL).
+- **REST API**: FastAPI endpoint for processing texts.
 
-## Technologie
+## Technologies
 
 - **Backend**: FastAPI (Python)
 - **AI**: Groq API (model llama-3.1-8b-instant)
-- **Baza danych**: Supabase
-- **Walidacja**: Pydantic
-- **Zależności**: Zobacz `requirements.txt`
+- **Database**: Supabase
+- **Validation**: Pydantic
+- **Dependencies**: See `requirements.txt`
 
-## Instalacja
+## Installation
 
-1. Sklonuj repo:
+1. Clone the repo:
    ```bash
    git clone https://github.com/Tomalson/ai-business-automator.git
    cd ai-business-automator
    ```
 
-2. Zainstaluj zależności:
+2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Skonfiguruj zmienne środowiskowe:
-   - Skopiuj `.env.example` do `.env`
-   - Wypełnij klucze: `GROQ_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY` (service_role secret)
+3. Configure environment variables:
+   - Copy `.env.example` to `.env`
+   - Fill in keys: `GROQ_API_KEY`, `SUPABASE_URL`, `SUPABASE_KEY` (service_role secret)
 
-4. Uruchom aplikację:
+4. Run the application:
    ```bash
    uvicorn main:app --reload
    ```
 
-5. API dostępne na `http://127.0.0.1:8000/docs` (Swagger UI)
+5. API available at `http://127.0.0.1:8000/docs` (Swagger UI)
 
-## Użycie
+## Usage
 
-Wyślij POST do `/process-lead` z JSON:
+Send POST to `/process-lead` with JSON:
 ```json
 {
-  "text": "Cześć, jestem Jan Kowalski z Warszawy. Interesuje się oprogramowaniem do automatyzacji sprzedaży. Budżet 10 000 PLN. Tel. 123-456-789. Email: jan@example.com"
+  "text": "Hi, I'm Jan Kowalski from Warsaw. Interested in sales automation software. Budget 10,000 PLN. Phone: 123-456-789. Email: jan@example.com"
 }
 ```
 
-Odpowiedź:
+Response:
 ```json
 {
   "name": "Jan Kowalski",
   "email": "jan@example.com",
   "phone": "123-456-789",
-  "product": "oprogramowanie do automatyzacji sprzedaży",
+  "product": "sales automation software",
   "budget_est": "10 000 PLN",
-  "urgency": "Wysoka",
-  "city": "Warszawa",
-  "summary": "Potrzebuję oprogramowania do automatyzacji sprzedaży, pilnie.",
+  "urgency": "High",
+  "city": "Warsaw",
+  "summary": "I need sales automation software urgently.",
   "score": 9
 }
 ```
 
-## Konfiguracja Supabase
+## Supabase Configuration
 
-1. Utwórz projekt na [supabase.com](https://supabase.com)
-2. W SQL Editor uruchom:
+1. Create a project on [supabase.com](https://supabase.com)
+2. In SQL Editor run:
    ```sql
    CREATE TABLE leads (
      id SERIAL PRIMARY KEY,
@@ -84,10 +84,10 @@ Odpowiedź:
    );
    ```
 
-## Licencja
+## License
 
-MIT License - zobacz [LICENSE](LICENSE)
+MIT License - see [LICENSE](LICENSE)
 
-## Autor
+## Author
 
 Kacper
