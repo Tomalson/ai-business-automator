@@ -41,7 +41,7 @@ System for automatic structuring of sales leads from unstructured texts (emails,
 
 4. Run the application:
    ```bash
-   uvicorn main:app --reload
+   python -m uvicorn main:app --reload
    ```
 
 5. API available at `http://127.0.0.1:8000/docs` (Swagger UI)
