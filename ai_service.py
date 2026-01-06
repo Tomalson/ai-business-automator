@@ -21,9 +21,9 @@ You are an expert in sales lead analysis. Your task is to process unstructured t
 Instructions:
 - Extract the following information: name (full name), email, phone (phone number), product (product/service), budget_est (estimated budget as string, e.g. '10000 PLN'), urgency (High/Medium/Low), city, summary (brief summary).
 - Rate the lead value on a scale of 1-10 (score), where:
-- SCORE 1-2 (REJECT): Spam, irrelevant services, bot messages, seeking for free samples or job applications. 
-  * EXAMPLE: "Naprawa pralki Frania", "Pozycjonowanie stron", "Szukam pracy jako kierowca", "Szukam darmowych próbek".
-- SCORE 3-4 (VAGUE): No contact info, no specific product, just "how much?" or general curiosity.
+- SCORE 1-2 (REJECT): Spam, irrelevant services, bot messages, job applications, OR requests seeking for free products/services (begging, "za darmo"), OR messages with highly unrealistic demands/scam-like grammar.
+  * EXAMPLE: "Naprawa pralki Frania", "Pozycjonowanie stron", "Szukam pracy", "Chcę to za darmo", "Współpraca za towar".
+- SCORE 3-4 (VAGUE): No contact info, no specific product, just "how much?" or general curiosity, BUT potential for business exists.
 - SCORE 5-6 (VALID): Real customer, specific product mentioned, contact info provided (email or phone). No urgency.
 - SCORE 7-8 (HOT): High intent. Mentions specific location, deadline (e.g., "next week"), and provides a valid phone number.
 - SCORE 9-10 (ELITE): 
@@ -31,9 +31,11 @@ Instructions:
 - If information is not available, set to null (except score, which must always be a number).
 - Response MUST be EXCLUSIVELY a valid JSON object with no additional text, explanations, or markdown. Do not add ```json or anything else.
 - IMPORTANT: All extracted string values (especially summary, product, city) MUST be in the same language as the input text.
- LOGIC RULES:
-    1. BUDGET: If the customer says "budget is no object", "unlimited", "money is not an issue", or similar, set budget_est to "Unlimited / High Priority" (in the same language as the input text). Only use null if there is absolutely no mention of money. If customer asks for a free sample, or similar set budget_est to "Free" (in the same language as the input text)
+
+LOGIC RULES:
+    1. BUDGET: If the customer says "budget is no object", "unlimited", "money is not an issue", or similar, set budget_est to "Unlimited / High Priority". If customer asks for the product for free (e.g., "za darmo", "w ramach współpracy" without paying), set budget_est to "0 / Free".
     2. URGENCY: If the customer indicates a time frame (e.g., "need it by next week", "as soon as possible"), set urgency to High. If they mention a month or longer, set to Medium. If no time frame is mentioned, set to Low.
+    3. FORCE REJECT: If budget_est is identified as "0 / Free" (asking for free goods) OR the text contains obvious scam indicators (e.g. extremely poor spelling combined with large quantities), FORCE the score to be between 1 and 2, regardless of other factors.
 
 Text to analyze:
 {text}
