@@ -8,11 +8,12 @@ System for automatic structuring of sales leads from unstructured texts (emails,
 
 ## Features
 
-- **AI-powered data extraction**: Extracts name, email, phone, product, budget, urgency, city, summary.
+- **AI-powered data extraction**: Extracts name, email, company, phone, product, budget, urgency, city, summary.
 - **Lead scoring**: Rates lead value on a scale of 1-10 (from spam to high value).
-- **Language consistency**: Output JSON fields (summary, product, city) match the input language.
+- **Language consistency**: Output JSON fields (summary, product, city).
 - **Database saving**: Automatically saves structured data to Supabase (PostgreSQL).
 - **REST API**: FastAPI endpoint for processing texts.
+- **Modular prompts**: Niche prompts live in a separate module for easy customization.
 
 ## Technologies
 
@@ -71,6 +72,45 @@ Response:
 }
 ```
 
+## Project Structure
+
+- [ai_service.py](ai_service.py): Core AI processing (routing, calling Groq, JSON parsing, profanity handling).
+- [prompts.py](prompts.py): Centralized niche prompt templates used by `AIService`.
+- [database.py](database.py): Supabase persistence.
+- [main.py](main.py): FastAPI app and routes.
+
+## Custom Niches (prompts)
+
+You can add or modify niche prompts in [prompts.py](prompts.py). Each niche is a key in the `PROMPTS` dictionary mapped to a multi-line string template. For example:
+
+```python
+# prompts.py
+PROMPTS = {
+   "PHOTOVOLTAIC & HEAT PUMP COMPANY": """
+ROLE: Senior Sales Qualifier for a PHOTOVOLTAIC & HEAT PUMP COMPANY.
+... (rules, scoring, extraction) ...
+""",
+
+   "AIR CONDITIONING & VENTILATION RECOVERY COMPANY.": """
+ROLE: Senior Sales Qualifier for an AIR CONDITIONING & VENTILATION RECOVERY COMPANY.
+... (rules, scoring, extraction) ...
+""",
+
+   # Add your own niche:
+   "my_custom_niche": """
+ROLE: Senior Sales Qualifier for <YOUR NICHE>.
+Define ambiguity handler, profanity handling, scoring matrix, and extraction rules.
+Return ONLY valid JSON with keys: name, company, email, phone, product, budget_est, urgency, city, summary, score.
+""",
+}
+```
+
+`AIService` automatically routes generic input to the best-matching niche where possible (e.g., HVAC keywords). You can still pass an explicit niche via dedicated methods if you extend the API.
+
+## Example Prompts Template
+
+For convenience, see [prompts.example.py](prompts.example.py) — copy it to [prompts.py](prompts.py) and edit keys and content to fit your business. The examples are neutral and generic (e.g., e-commerce, SaaS, home renovation) to serve as starting points; they are not tied to our PV/HVAC niches. This keeps the main service logic clean while letting you iterate on prompt content.
+
 ## Example
 
 **Input text (messy):**
@@ -101,6 +141,7 @@ Cześć, jestem Jan Kowalski z Warszawy. Interesuje się oprogramowaniem do auto
    CREATE TABLE leads (
      id SERIAL PRIMARY KEY,
      name TEXT,
+     company TEXT,
      email TEXT,
      phone TEXT,
      product TEXT,
