@@ -84,7 +84,76 @@ class AIService:
         if isinstance(lead.score, int) and lead.score > 1:
           lead.score = max(1, lead.score - 1)
 
+      # Ensure neutral summary for off-topic leads (score <= 2)
+      try:
+        if isinstance(lead.score, int) and lead.score <= 2:
+          neutral = "Zapytanie poza zakresem oferty."
+          # Preserve profanity note if present
+          if lead.summary and "wulgarny" in lead.summary.lower():
+            # Keep only the note
+            lead.summary = neutral + " Wiadomość zawiera wulgarny język."
+          else:
+            lead.summary = neutral
+      except Exception:
+        pass
+
+      # Sanitize name: only accept likely personal names; otherwise set to None
+      try:
+        lead.name = self._sanitize_name(lead.name)
+      except Exception:
+        lead.name = None
+
+      # Backfill email/phone from source text if missing
+      try:
+        if not lead.email:
+          lead.email = self._extract_email(source_text)
+      except Exception:
+        pass
+      try:
+        if not lead.phone:
+          lead.phone = self._extract_phone(source_text)
+      except Exception:
+        pass
+
       return lead
+
+    def _sanitize_name(self, name: Optional[str]) -> Optional[str]:
+      if not name:
+        return None
+      s = name.strip()
+      if not s:
+        return None
+      if len(s) > 60:
+        return None
+      if any(ch.isdigit() for ch in s):
+        return None
+      if "@" in s:
+        return None
+      s_l = s.lower()
+      noise_keywords = (
+        "pokoi", "pokoj", "pokoje", "wyceny", "wycena", "grupy", "grupa", "osób", "osoby", "osoba",
+        "tydzie", "dla", "proszę", "prosze", "rezerwac", "nocleg", "hotel", "klimatyz", "fotowolt",
+        "pompa", "rekuper", "budżet", "budzet", "termin", "ofert"
+      )
+      if any(k in s_l for k in noise_keywords):
+        return None
+      # Accept names like Jan, Jan Kowalski, Jan A. Kowalski (basic heuristic)
+      name_regex = re.compile(r"^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+( [A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż\.]+){0,2}$")
+      if name_regex.match(s):
+        return s
+      return None
+
+    def _extract_email(self, text: str) -> Optional[str]:
+      if not text:
+        return None
+      m = re.search(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", text)
+      return m.group(0) if m else None
+
+    def _extract_phone(self, text: str) -> Optional[str]:
+      if not text:
+        return None
+      m = re.search(r"\+?\d[\d\s\-()]{6,}\d", text)
+      return m.group(0).strip() if m else None
 
     def process_lead_text(self, text: str) -> Lead:
         """Default entrypoint: auto-detect niche based on text."""
@@ -95,6 +164,23 @@ class AIService:
         """Lightweight router so '/process-lead' works without passing niche explicitly."""
         normalized = (text or "").lower()
 
+        # Hotel/hospitality keywords
+        hotel_keywords = (
+            "hotel",
+            "nocleg",
+            "pokój",
+            "pokoje",
+            "pokoj",
+            "pokoi",
+            "rezerwacj",
+            "zakwaterowanie",
+            "konferencj",
+            "event",
+        )
+        if any(keyword in normalized for keyword in hotel_keywords):
+            return "hotelarstwo"
+
+        # HVAC keywords
         hvac_keywords = (
             "klimatyz",
             "klimatyzator",
