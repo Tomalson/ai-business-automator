@@ -4,6 +4,7 @@ import time
 from groq import Groq
 from schemas import Lead
 import json
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -14,34 +15,59 @@ class AIService:
         self.client = Groq(api_key=os.getenv("GROQ_API_KEY"))
         self.model = "llama-3.1-8b-instant"  # Updated to current available Groq model
 
+
     def process_lead_text(self, text: str) -> Lead:
         prompt = f"""
-You are an expert in sales lead analysis. Your task is to process unstructured text from an email or message into structured JSON data.
+        ROLE: Senior Sales Qualifier for a PHOTOVOLTAIC & HEAT PUMP COMPANY.
+        
+        YOUR MISSION:
+        Qualify leads for Solar Panels (Fotowoltaika) and Heat Pumps.
+        Your goal is NOT to reject potential customers, but to categorize them.
+        
+        ### 1. AMBIGUITY HANDLER (CRITICAL):
+        - If user writes "panele" (panels) AND mentions "dach" (roof), "słońce" (sun), "prąd" (electricity) -> IT IS PHOTOVOLTAIC. -> PASS.
+        - If user writes "panele" without context -> Check if it could be floor panels. If unsure but likely solar or pump -> PASS with Score 3.
+        - If user writes "pompa" (pump) AND mentions "ciepła" (heat), "dom" (house), "ogrzewanie" (heating) -> IT IS HEAT PUMP. -> PASS.
+        - If user writes "pompa" without context -> Check if it could be water pump. If unsure but likely heat pump -> PASS with Score 3.
+        - "Ile za..." (How much for...) is a VALID BUYING INTENT. Do NOT reject it as spam.
 
-Instructions:
-- Extract the following information: name (full name), email, phone (phone number), product (product/service), budget_est (estimated budget as string, e.g. '10000 PLN'), urgency (High/Medium/Low), city, summary (brief summary).
-- Rate the lead value on a scale of 1-10 (score), where:
-- SCORE 1-2 (REJECT): Spam, irrelevant services, bot messages, job applications, OR requests seeking for free products/services (begging, "za darmo"), OR messages with highly unrealistic demands/scam-like grammar.
-  * EXAMPLE: "Naprawa pralki Frania", "Pozycjonowanie stron", "Szukam pracy", "Chcę to za darmo", "Współpraca za towar".
-- SCORE 3-4 (VAGUE): No contact info, no specific product, just "how much?" or general curiosity, BUT potential for business exists.
-- SCORE 5-6 (VALID): Real customer, specific product mentioned, contact info provided (email or phone). No urgency.
-- SCORE 7-8 (HOT): High intent. Mentions specific location, deadline (e.g., "next week"), and provides a valid phone number.
-- SCORE 9-10 (ELITE): 
-  * MANDATORY 10: If customer mentions "Unlimited budget", "Money is no object", "Płacę gotówką bez limitu", "Budget: Unlimited", OR is a "Large Corporate Client" with ASAP urgency.
-- If information is not available, set to null (except score, which must always be a number).
-- Response MUST be EXCLUSIVELY a valid JSON object with no additional text, explanations, or markdown. Do not add ```json or anything else.
-- IMPORTANT: All extracted string values (especially summary, product, city) MUST be in the same language as the input text.
+        ### 2. SCORING MATRIX:
+        
+        * SCORE 1 (TRASH / OFF-TOPIC):
+          - Explicitly wrong industry: "Naprawa pralki", "Układanie paneli podłogowych", "Sprzedam Opla".
+          - Spam/Ads/Job seekers.
+          
+        * SCORE 3-4 (VALID BUT VAGUE):
+          - Matches our industry (Solar/Heating) but lacks details.
+          - Examples: "Ile za panele na dachu?", "Chcę fotowoltaikę", "Cennik pomp ciepła".
+          - ACTION: Valid Lead. Save to DB.
+          
+        * SCORE 5-7 (SOLID):
+          - Industry match + Contact info.
+          - SCORE 5: Basic specifics provided.
+          - SCORE 6-7: HIGH DETAIL (Location + Bill amount + System size/Power). Example: "Lodz, 450zl bill, 6kWp".
+          
+        * SCORE 10 (GOLDEN):
+          - Industry match + "Unlimited budget" / "Commercial/Hala" / "Urgent".
 
-LOGIC RULES:
-    1. BUDGET: If the customer says "budget is no object", "unlimited", "money is not an issue", or similar, set budget_est to "Unlimited / High Priority". If customer asks for the product for free (e.g., "za darmo", "w ramach współpracy" without paying), set budget_est to "0 / Free".
-    2. URGENCY: If the customer indicates a time frame (e.g., "need it by next week", "as soon as possible"), set urgency to High. If they mention a month or longer, set to Medium. If no time frame is mentioned, set to Low.
-    3. FORCE REJECT: If budget_est is identified as "0 / Free" (asking for free goods) OR the text contains obvious scam indicators (e.g. extremely poor spelling combined with large quantities), FORCE the score to be between 1 and 2, regardless of other factors.
-
-Text to analyze:
-{text}
-
-JSON Response:
-"""
+        ### 3. EXTRACTION RULES:
+        - Extract ALL available details into the JSON fields:
+          * `name`: Full name of the sender.
+          * `company`: Name of the company if B2B.
+          * `email`: Extract email address.
+          * `phone`: Extract phone number.
+          * `city`: City or location mentioned.
+          * `budget_est`: Estimated budget or "Unlimited" if stated.
+          * `urgency`: "High" (ASAP), "Medium", or "Low".
+          * `product`: Classify as "Fotowoltaika", "Pompy Ciepła", "Fotowoltaika i/lub Pompy Ciepła" or "Inne".
+          * `summary`: A short summary of the inquiry. 
+        - If any field is missing, set it to null in JSON.
+        INPUT TEXT:
+        "{text}"
+        the output must be a valid JSON matching the Lead schema. 
+        Ensure the summary is in polish with correct grammar (e.g. "Paneli fotowoltaicznych" instead of "Paneli fotowoltajnych") ect.
+        OUTPUT JSON:
+        """
 
         max_retries = 3
         for attempt in range(max_retries):
@@ -64,13 +90,16 @@ JSON Response:
                     raw_content = raw_content[:-3]
                 raw_content = raw_content.strip()
                 
+                # Try to find JSON object if extra text exists
+                json_match = re.search(r"\{.*\}", raw_content, re.DOTALL)
+                if json_match:
+                    raw_content = json_match.group(0)
+
                 data = json.loads(raw_content)
                 # Validate with Pydantic
                 lead = Lead(**data)
                 logger.info("Successfully processed lead")
                 return lead
-            except json.JSONDecodeError as e:
-                logger.warning(f"Invalid JSON response on attempt {attempt + 1}: {e}")
             except Exception as e:
                 logger.error(f"Error during AI processing on attempt {attempt + 1}: {str(e)}")
                 if attempt < max_retries - 1:
@@ -80,6 +109,7 @@ JSON Response:
                     # Return a lead indicating manual verification needed
                     return Lead(
                         name=None,
+                        company=None,
                         email=None,
                         phone=None,
                         product=None,
