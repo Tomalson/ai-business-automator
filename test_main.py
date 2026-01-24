@@ -1,6 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import Mock, patch, MagicMock
+import os
+
+# Set dummy environment variables for tests
+os.environ.setdefault("GROQ_API_KEY", "test-key-12345")
+os.environ.setdefault("SUPABASE_URL", "https://test.supabase.co")
+os.environ.setdefault("SUPABASE_KEY", "test-key-67890")
+
 from main import app, ai_service, db_service
 from schemas import Lead
 
