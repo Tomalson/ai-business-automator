@@ -81,7 +81,7 @@ class TestProcessLeadEndpoint:
             city="Test", summary="test", score=5
         )
         mock_ai_process.return_value = mock_lead
-        mock_db_insert.side_effect = ValueError("Database connection failed")
+        mock_db_insert.side_effect = Exception("Database connection failed")
         
         response = client.post("/process-lead", json={
             "text": "Test lead"
@@ -131,7 +131,8 @@ class TestLeadSchema:
     
     def test_lead_schema_missing_field(self):
         """Test that Lead schema requires all fields"""
-        with pytest.raises(TypeError):
+        from pydantic import ValidationError
+        with pytest.raises(ValidationError):
             Lead(
                 name="John Doe",
                 email="john@example.com",
