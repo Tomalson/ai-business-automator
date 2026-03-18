@@ -4,7 +4,3 @@ pydantic[email]
 groq
 supabase
 python-dotenv
-pytest
-pytest-cov
-requests
-httpx
